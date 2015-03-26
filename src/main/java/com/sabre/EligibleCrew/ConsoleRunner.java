@@ -11,13 +11,13 @@ class ConsoleRunner
 		QueryBuilder qb = new QueryBuilder
 						 (args[0], args[1], args[2], args[3], args[4]);
 					
-
-		List ranks = new ArrayList();
+		qb.printSubqueries();
+/* 		List ranks = new ArrayList();
 		ranks = qb.finalizeRanks();
 		
 		Iterator iter = ranks.iterator();
 		while(iter.hasNext()){
 			System.out.println(iter.next()); 
-		}
+		} */
 	}
 }
