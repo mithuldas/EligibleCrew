@@ -8,7 +8,7 @@ class ConsoleRunner
 {	 
 	public static void main(String[] args)
 	{
-		QueryBuilder qb = new QueryBuilder
+		Query qb = new Query
 						 (args[0], args[1], args[2], args[3], args[4]);
 					
 		qb.printSubqueries();
