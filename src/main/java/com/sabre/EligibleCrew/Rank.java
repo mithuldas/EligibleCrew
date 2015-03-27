@@ -2,15 +2,16 @@ package com.sabre.EligibleCrew;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 class Rank
 {
 	private static final String[] VALID_RANKS = {"FD","CPT","FO","PA","BCA","GM","BA","EC"};
-	private String rankCode;
+	private String pairingRank;
 	
 	public Rank(String rank, String uprankInd)
 	{
-		rankCode=rank;
+		pairingRank=rank;
 	}
 	
 	public boolean isValid()
@@ -18,7 +19,7 @@ class Rank
 		boolean rankIsValid = false;
 		
 		for(int i=0; i<VALID_RANKS.length; i++){
-			if(rankCode.equals(VALID_RANKS[i])) {
+			if(pairingRank.equals(VALID_RANKS[i])) {
 				rankIsValid = true;
 			}
 		}
@@ -33,16 +34,44 @@ class Rank
 			System.out.println("Invalid rank"); // convert to logging
 		}
 		
-		if(rankCode.equals("FD")){
+		if(pairingRank.equals("FD")){
 			finalRanks.add("CPT");
 			finalRanks.add("FO");
 		}
 
-		if(rankCode.equals("CPT")){
+		if(pairingRank.equals("CPT")){
 			finalRanks.add("CPT");
 		}
 
 		return finalRanks;
 	}
-
+	
+	public List getPossibleUpranks()
+	{
+		List upranks = new ArrayList();
+		
+		if(pairingRank.equals("PA") || pairingRank.equals("GM")){
+			upranks.add("BCA"); upranks.add("EC");
+		}
+		
+		if(pairingRank.equals("BCA")){
+			upranks.add("EC");
+		}
+		
+		return upranks;
+	}
+	
+	public boolean requiresActiveQual()
+	{
+		List ranksThatNeedActiveQual = 
+		new ArrayList(new ActiveRankQualsDAO().getActiveRankQuals());
+	
+		Iterator iter = ranksThatNeedActiveQual.iterator();
+		while(iter.hasNext()){
+			if(iter.next().equals(pairingRank))
+				return true;
+		}
+		
+		return false;
+	}
 }

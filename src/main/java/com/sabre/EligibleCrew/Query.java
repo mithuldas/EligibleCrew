@@ -17,8 +17,8 @@ class Query
 	private String nonLeaveDays;
 	private String uprankInd;
 	private String header;
-	private Map brfSubqueries;
-	private String nonleave;
+	private String baseFleet;
+	private String nonLeave;
 /* 
  * Standard constructor with minimum required parameters
  */	
@@ -59,92 +59,69 @@ class Query
 	
 	}
 				 
- 	void generateBaseRankFleet(List ranks) // map in case of multi component, I.e, CPT and FO
+ 	void generateBaseFleet() // map in case of multi component, I.e, CPT and FO
 	{
-		Map brfSubqueries = new HashMap();
-		
-		if(!(ranks.size()==1 || ranks.size()==2)) {
-			System.out.println("Invalid rank count, won't proceed"); // add error logging for invalid number of ranks
-		}
-		
-		else {
-			for(int i=0; i<2; i++){
-				String brfQuery=
-				"SELECT /* +RULE*/ DISTINCT A.STAFF_NUM as Staff_Number," + 
-				"	A.PREFERRED_NAME," + 
-				"	A.FIRST_NAME," + 
-				"	A.SURNAME," + 
-				"	B.RANK_CD," + 
-				"	C.BASE," + 
-				"	P.RSRC_GRP_CD" + 
-				" FROM CREW_RANK_V B," + 
-				"	CREW_BASE_V C," + 
-				"	CREW_RSRC_GRP_V P," + 
-				"	CREW_V A" + 
-				" WHERE A.STAFF_NUM = B.STAFF_NUM" + 
-				"	AND A.STAFF_NUM = C.STAFF_NUM" + 
-				"	AND A.STAFF_NUM = P.STAFF_NUM" + 
-				"	AND (" + 
-				"		A.TERM_DT >= to_date((select dt from roster_str),'DDMONYY')" + 
-				"		OR A.TERM_DT IS NULL" + 
-				"		)" + 
-				"	AND (" + 
-				"		A.RETR_DT >= to_date((select dt from roster_str),'DDMONYY')" + 
-				"		OR A.RETR_DT IS NULL" + 
-				"		)" + 
-				"	AND (" + 
-				"		(" + 
-				"			to_date((select dt from roster_str),'DDMONYY') < B.EXP_DT" + 
-				"			OR B.EXP_DT IS NULL" + 
-				"			)" + 
-				"		AND (select end_dt from roster_end) > B.EFF_DT" + 
-				"		)" + 
-				"	AND (" + 
-				"		(" + 
-				"			to_date((select dt from roster_str),'DDMONYY') < C.EXP_DT" + 
-				"			OR C.EXP_DT IS NULL" + 
-				"			)" + 
-				"		AND (select end_dt from roster_end) > C.EFF_DT" + 
-				"		)" + 
-				"	AND A.STAFF_NUM IN (" + 
-				"		SELECT STAFF_NUM" + 
-				"		FROM CREW_FLEET_V" + 
-				"		WHERE VALID_IND = 'Y'" + 
-				"			AND FLEET_CD IN (" + 
-				"				'"+fleet+"'" + 
-				"				)" + 
-				"			AND (" + 
-				"				(" + 
-				"					to_date((select dt from roster_str),'DDMONYY') BETWEEN EFF_DT" + 
-				"						AND NVL(EXP_DT, TO_DATE('31-DEC-2999', 'DD-MON-YYYY'))" + 
-				"					)" + 
-				"				OR (" + 
-				"					(select end_dt from roster_end) BETWEEN EFF_DT" + 
-				"						AND NVL(EXP_DT, TO_DATE('31-DEC-2999', 'DD-MON-YYYY'))" + 
-				"					)" + 
-				"				)" + 
-				"		GROUP BY STAFF_NUM" + 
-				"		)" + 
-				"	AND B.RANK_CD IN (" + 
-				"		'"+ranks.get(i)+"'" + 
-				"		)" + 
-				"	AND (" + 
-				"		(" + 
-				"			to_date((select dt from roster_str),'DDMONYY') < P.EXP_DT" + 
-				"			OR P.EXP_DT IS NULL" + 
-				"			)" + 
-				"		AND (select end_dt from roster_end) > P.EFF_DT" + 
-				"		)";
-				
-				brfSubqueries.put(ranks.get(i), brfQuery);
-			}
-		}
-		this.brfSubqueries=brfSubqueries;
+		baseFleet=
+		"SELECT /* +RULE*/ DISTINCT A.STAFF_NUM as Staff_Number," + 
+		"	A.PREFERRED_NAME," + 
+		"	A.FIRST_NAME," + 
+		"	A.SURNAME," + 
+		"	B.RANK_CD," + 
+		"	C.BASE," + 
+		"	P.RSRC_GRP_CD" + 
+		" FROM CREW_RANK_V B," + 
+		"	CREW_BASE_V C," + 
+		"	CREW_RSRC_GRP_V P," + 
+		"	CREW_V A" + 
+		" WHERE A.STAFF_NUM = B.STAFF_NUM" + 
+		"	AND A.STAFF_NUM = C.STAFF_NUM" + 
+		"	AND A.STAFF_NUM = P.STAFF_NUM" + 
+		"	AND (" + 
+		"		A.TERM_DT >= to_date((select dt from roster_str),'DDMONYY')" + 
+		"		OR A.TERM_DT IS NULL" + 
+		"		)" + 
+		"	AND (" + 
+		"		A.RETR_DT >= to_date((select dt from roster_str),'DDMONYY')" + 
+		"		OR A.RETR_DT IS NULL" + 
+		"		)" + 
+		"	AND (" + 
+		"		(" + 
+		"			to_date((select dt from roster_str),'DDMONYY') < B.EXP_DT" + 
+		"			OR B.EXP_DT IS NULL" + 
+		"			)" + 
+		"		AND (select end_dt from roster_end) > B.EFF_DT" + 
+		"		)" + 
+		"	AND (" + 
+		"		(" + 
+		"			to_date((select dt from roster_str),'DDMONYY') < C.EXP_DT" + 
+		"			OR C.EXP_DT IS NULL" + 
+		"			)" + 
+		"		AND (select end_dt from roster_end) > C.EFF_DT" + 
+		"		)" + 
+		"	AND A.STAFF_NUM IN (" + 
+		"		SELECT STAFF_NUM" + 
+		"		FROM CREW_FLEET_V" + 
+		"		WHERE VALID_IND = 'Y'" + 
+		"			AND FLEET_CD IN (" + 
+		"				'"+fleet+"'" + 
+		"				)" + 
+		"			AND (" + 
+		"				(" + 
+		"					to_date((select dt from roster_str),'DDMONYY') BETWEEN EFF_DT" + 
+		"						AND NVL(EXP_DT, TO_DATE('31-DEC-2999', 'DD-MON-YYYY'))" + 
+		"					)" + 
+		"				OR (" + 
+		"					(select end_dt from roster_end) BETWEEN EFF_DT" + 
+		"						AND NVL(EXP_DT, TO_DATE('31-DEC-2999', 'DD-MON-YYYY'))" + 
+		"					)" + 
+		"				)" + 
+		"		GROUP BY STAFF_NUM" + 
+		"		)";
 	}
 	
 	void generateNonLeave()
 	{
-		nonleave =
+		nonLeave =
 				"   and a.staff_num not in( "+
 		"   SELECT DISTINCT A.STAFF_NUM FROM   CREW_RANK_V B,CREW_BASE_V C , CREW_RSRC_GRP_V P,  CREW_V A,  "+
 		"(select round(sum(days_off_in_period)) as total_days_off, staff_num from (select r.*, (select end_dt from roster_end)- to_date((select dt from roster_str),'DDMONYY') as days_off_in_period from roster_v r where ACT_STR_DT<to_date((select dt from roster_str),'DDMONYY') and act_end_dt>(select end_dt from roster_end) and duty_cd in (select duty_cd from assignment_types_v where duty_type in ('L','O')) and delete_ind='N' "+
@@ -161,15 +138,20 @@ class Query
 	}
  	void printSubqueries(){
 		Rank rank = new Rank(rankCode, uprankInd);
+		if(rank.requiresActiveQual())
+			System.out.println("Rank needs acting rank qual...");
+		else if(!rank.requiresActiveQual())
+			System.out.println("Rank does not need acting rank qual...");
 		
 		generateHeader();
-		generateBaseRankFleet(rank.getQueryRankList());
+		generateBaseFleet();
 		generateNonLeave();
 		
 		System.out.println(header);
-		System.out.println(brfSubqueries.get(rank.getQueryRankList().get(0)));
-		System.out.println(brfSubqueries.get(rank.getQueryRankList().get(1)));
-		System.out.println(nonleave);
+		System.out.println(baseFleet);
+/* 		System.out.println(brfSubqueries.get(rank.getQueryRankList().get(0)));
+		System.out.println(brfSubqueries.get(rank.getQueryRankList().get(1))); */
+		System.out.println(nonLeave);
 	}
 	
 

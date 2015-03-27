@@ -11,6 +11,9 @@ class ConsoleRunner
 		Query qb = new Query
 						 (args[0], args[1], args[2], args[3], args[4]);
 					
+		ActiveRankQualsDAO arq = new ActiveRankQualsDAO();
+		arq.getActiveRankQuals();
+		
 		qb.printSubqueries();
 /* 		List ranks = new ArrayList();
 		ranks = qb.finalizeRanks();
