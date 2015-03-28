@@ -29,7 +29,6 @@ class ActiveRankQualsDAO
 			
 			while (rs.next()) {
 				ActiveRankQuals.add(rs.getString("ACTIVE_RANK"));
-				System.out.println(rs.getString("ACTIVE_RANK"));
 		    }
 		    conn.close();
 		}

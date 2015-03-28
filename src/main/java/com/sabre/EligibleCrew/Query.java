@@ -143,28 +143,20 @@ class Query
 		else if(!rank.requiresActiveQual())
 			System.out.println("Rank does not need acting rank qual...");
 		
-		generateHeader();
+		rank.examineComponents();
+		
+/*  		generateHeader();
 		generateBaseFleet();
 		generateNonLeave();
 		
 		System.out.println(header);
 		System.out.println(baseFleet);
-/* 		System.out.println(brfSubqueries.get(rank.getQueryRankList().get(0)));
-		System.out.println(brfSubqueries.get(rank.getQueryRankList().get(1))); */
-		System.out.println(nonLeave);
+ 		System.out.println(brfSubqueries.get(rank.getQueryRankList().get(0)));
+		System.out.println(brfSubqueries.get(rank.getQueryRankList().get(1))); 
+		System.out.println(nonLeave); */
 	}
 	
 
-/* 	Map getQualComponents()
-	{
-	
-	
-	}
 
-	String getNonLeaveDaysComponent()
-	{
-	
-	
-	}   */
 	
 }
