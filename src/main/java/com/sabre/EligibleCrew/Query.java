@@ -137,20 +137,17 @@ class Query
 		") ";
 	}
  	void printSubqueries(){
-		Rank rank = new Rank(rankCode, uprankInd);
-		if(rank.requiresActiveQual())
-			System.out.println("Rank needs acting rank qual...");
-		else if(!rank.requiresActiveQual())
-			System.out.println("Rank does not need acting rank qual...");
+		Rank rank = new Rank(rankCode, fleet, uprankInd);
+		Map actingRankQuals = new HashMap(new RankQualsDAO().getActingRankQuals(fleet));
 		
-		rank.examineComponents();
-		
-/*  		generateHeader();
+  		generateHeader();
 		generateBaseFleet();
 		generateNonLeave();
 		
 		System.out.println(header);
 		System.out.println(baseFleet);
+		rank.examineComponents();
+/*		
  		System.out.println(brfSubqueries.get(rank.getQueryRankList().get(0)));
 		System.out.println(brfSubqueries.get(rank.getQueryRankList().get(1))); 
 		System.out.println(nonLeave); */

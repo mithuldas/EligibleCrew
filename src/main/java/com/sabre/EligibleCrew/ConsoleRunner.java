@@ -9,7 +9,7 @@ class ConsoleRunner
 	public static void main(String[] args)
 	{
 		Query qb = new Query
-						 (args[0], args[1], args[2], args[3], args[4]);
+						 (args[0], args[1], args[2], args[3], args[4], args[5]);
 					
 		qb.printSubqueries();
 /* 		List ranks = new ArrayList();

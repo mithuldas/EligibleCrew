@@ -8,8 +8,10 @@ import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
-class ActiveRankQualsDAO
+class RankQualsDAO
 {
 	/* Get a list of ranks that require quals for "Active" ranks as well */
 	public List getActiveRankQuals()
@@ -38,5 +40,33 @@ class ActiveRankQualsDAO
 		}
 
 		return ActiveRankQuals;
+	}
+	
+	public Map getActingRankQuals(String fleetCd)
+	{
+		Map ActingRankQuals = new HashMap();  
+		
+		try{
+		    DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+		    Connection conn = DriverManager.getConnection
+		    ("jdbc:oracle:thin:@192.168.0.106:1522:aeroflot", "acdba", "acdba");    
+		    Statement stmt = conn.createStatement();
+			
+			String query = "select distinct acting_rank, qual_cd from ACTING_RANK_QUALS_V "+
+							"where fleet_cd= '"+fleetCd+"'";
+							
+		    ResultSet rs = stmt.executeQuery(query);
+			
+			while (rs.next()) {
+				ActingRankQuals.put(rs.getString("ACTING_RANK"), rs.getString("QUAL_CD"));
+		    }
+		    conn.close();
+		}
+		
+		catch(SQLException s) {
+			System.out.println (s.getMessage());
+		}
+
+		return ActingRankQuals;
 	}
 }

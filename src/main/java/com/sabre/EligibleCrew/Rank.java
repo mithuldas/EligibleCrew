@@ -13,14 +13,16 @@ class Rank
 	private static final String[] VALID_RANKS = {"FD","CPT","FO","PA","BCA","GM","BA","EC"};
 	private String pairingRank;
 	private String uprankInd;
+	private String fleetCd;
 	private List requiredComponents;
 	/* required components is the key for queryComponents */
 	private Map queryComponents;
 	
-	public Rank(String rank, String uprank_Ind)
+	public Rank(String rank, String fleet, String uprank_Ind)
 	{
 		uprankInd=uprank_Ind;
 		pairingRank=rank;
+		fleetCd=fleet;
 		determineComponents();
 	}
 	
@@ -80,7 +82,7 @@ class Rank
 	public boolean requiresActiveQual()
 	{
 		List ranksThatNeedActiveQual = 
-		new ArrayList(new ActiveRankQualsDAO().getActiveRankQuals());
+		new ArrayList(new RankQualsDAO().getActiveRankQuals());
 	
 		Iterator iter = ranksThatNeedActiveQual.iterator();
 		while(iter.hasNext()){
@@ -157,23 +159,63 @@ class Rank
 	
 	String generateComponent(String pairingRank, List componentRanks, String componentType)
 	{
-		String testComponent = "Component details\n"+pairingRank+"\nComponent Ranks: ";
-		Iterator iter = componentRanks.iterator();
+		String ranks= transformListToSQL(componentRanks);
+		String component=null;
+		Map actingRankQuals = new HashMap(new RankQualsDAO().getActingRankQuals(fleetCd));
 		
-		while(iter.hasNext()){
-			testComponent=testComponent+(iter.next())+ " "; 
+		if(componentType.equals("Simple")){
+		component=
+		"		AND B.RANK_CD IN ( "+
+		"		"+ranks+
+		"		) "+
+		"	AND ( "+
+		"		( "+
+		"			to_date((select dt from roster_str),'DDMONYY') < P.EXP_DT "+
+		"			OR P.EXP_DT IS NULL "+
+		"			) "+
+		"		AND (select end_dt from roster_end) > P.EFF_DT "+
+		"		) ";
+		
 		}
 		
-		testComponent=testComponent+"\n"+componentType;
-		return testComponent;
+		if(componentType.equals("Complex")){
+			component= 
+			"		AND B.RANK_CD IN ( "+
+			"		"+ranks+
+			"		) "+
+			"	AND ( "+
+			"		( "+
+			"			to_date((select dt from roster_str),'DDMONYY') < P.EXP_DT "+
+			"			OR P.EXP_DT IS NULL "+
+			"			) "+
+			"		AND (select end_dt from roster_end) > P.EFF_DT "+
+			"		) "+
+			"	and exists (select 1 from crew_qualifications_v q where q.staff_num=a.staff_num and qual_cd='"+actingRankQuals.get(pairingRank)+"' AND ( "+
+			"				(EXPIRY_DTS IS NULL) "+
+			"				OR EXPIRY_DTS > to_date((select dt from roster_str),'DDMONYY') "+
+			"				) "+
+			"			AND ISSUED_DTS < (select end_dt from roster_end)) ";
+		}
+		return component;		
 	}
 	
+	String transformListToSQL(List list){
+		String sqlInput="'";
+		Iterator iter = list.iterator();
+		while(iter.hasNext()){
+			sqlInput=sqlInput+iter.next()+"'";
+			if(iter.hasNext())
+				sqlInput=sqlInput+",'";
+		}
+		return sqlInput;
+	}
+
 	void examineComponents()
 	{
 		Iterator requiredComponentsIter = requiredComponents.iterator();
 		
 		while(requiredComponentsIter.hasNext()){
-			System.out.println(queryComponents.get(requiredComponentsIter.next()));
+			System.out.println(queryComponents.get(requiredComponentsIter.next())+"\n\n");
 		}
 	
 	}
