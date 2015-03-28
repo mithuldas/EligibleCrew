@@ -10,8 +10,9 @@ class ConsoleRunner
 	{
 		Query qb = new Query
 						 (args[0], args[1], args[2], args[3], args[4], args[5]);
+						 
+		System.out.println(qb.get());
 					
-		qb.printSubqueries();
 /* 		List ranks = new ArrayList();
 		ranks = qb.finalizeRanks();
 		

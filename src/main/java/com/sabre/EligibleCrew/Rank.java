@@ -16,7 +16,7 @@ class Rank
 	private String fleetCd;
 	private List requiredComponents;
 	/* required components is the key for queryComponents */
-	private Map queryComponents;
+	protected Map queryComponents;
 	
 	public Rank(String rank, String fleet, String uprank_Ind)
 	{
@@ -26,13 +26,17 @@ class Rank
 		determineComponents();
 	}
 	
-	public List getPairingRankAsList(){
+	public int getNumComponents(){
+		return requiredComponents.size();
+	}
+	
+	private List getPairingRankAsList(){
 		List pairingRankList = new ArrayList();
 		pairingRankList.add(pairingRank);
 		return pairingRankList;
 	}
 	
-	public boolean isValid()
+	private boolean isValid()
 	{
 		boolean rankIsValid = false;
 		
@@ -44,7 +48,7 @@ class Rank
 		return rankIsValid;
 	}
 	
-	public List getQueryRankList() // logic in this function depends on uprank is required
+	private List getQueryRankList() // logic in this function depends on uprank is required
 	{
 		List finalRanks = new ArrayList();
 		
@@ -165,7 +169,7 @@ class Rank
 		
 		if(componentType.equals("Simple")){
 		component=
-		"		AND B.RANK_CD IN ( "+
+		"AND B.RANK_CD IN ( "+
 		"		"+ranks+
 		"		) "+
 		"	AND ( "+
@@ -180,7 +184,7 @@ class Rank
 		
 		if(componentType.equals("Complex")){
 			component= 
-			"		AND B.RANK_CD IN ( "+
+			"AND B.RANK_CD IN ( "+
 			"		"+ranks+
 			"		) "+
 			"	AND ( "+

@@ -16,9 +16,10 @@ class Query
 	private String rosterYear;
 	private String nonLeaveDays;
 	private String uprankInd;
-	private String header;
-	private String baseFleet;
-	private String nonLeave;
+	private String headerSubquery;
+	private String baseFleetSubquery;
+	private String nonLeaveSubquery;
+	private String finalQuery;
 /* 
  * Standard constructor with minimum required parameters
  */	
@@ -31,6 +32,10 @@ class Query
 		this.rosterMonth=rosterMonth;
 		this.rosterYear=rosterYear;
 		this.nonLeaveDays=nonLeaveDays;
+		generateHeader();
+		generateBaseFleet();
+		generateNonLeave();
+		assembleQuery();
 	}
 	
 /* 	
@@ -46,22 +51,26 @@ class Query
 		this.rosterYear=rosterYear;
 		this.nonLeaveDays=nonLeaveDays;
 		this.uprankInd=uprankInd;
+  		generateHeader();
+		generateBaseFleet();
+		generateNonLeave();
+		assembleQuery();
 	}
 	
-	void generateHeader()
+	private void generateHeader()
 	{
 		String rosterStrDt = "01" + rosterMonth + rosterYear;
 		
-		header =
+		headerSubquery =
 		"with roster_str as (select '"+rosterStrDt+"' as dt from dual), "+
 		"	 min_working_days as (select '"+nonLeaveDays+"' as non_leave_days from dual), "+
 		"     roster_end as (select last_day(to_date(dt,'DDMONYY HH24MI')+86399/86400) as  end_dt from roster_str) ";
 	
 	}
 				 
- 	void generateBaseFleet() // map in case of multi component, I.e, CPT and FO
+ 	private void generateBaseFleet() // map in case of multi component, I.e, CPT and FO
 	{
-		baseFleet=
+		baseFleetSubquery=
 		"SELECT /* +RULE*/ DISTINCT A.STAFF_NUM as Staff_Number," + 
 		"	A.PREFERRED_NAME," + 
 		"	A.FIRST_NAME," + 
@@ -119,10 +128,10 @@ class Query
 		"		)";
 	}
 	
-	void generateNonLeave()
+	private void generateNonLeave()
 	{
-		nonLeave =
-				"   and a.staff_num not in( "+
+		nonLeaveSubquery =
+		"and a.staff_num not in( "+
 		"   SELECT DISTINCT A.STAFF_NUM FROM   CREW_RANK_V B,CREW_BASE_V C , CREW_RSRC_GRP_V P,  CREW_V A,  "+
 		"(select round(sum(days_off_in_period)) as total_days_off, staff_num from (select r.*, (select end_dt from roster_end)- to_date((select dt from roster_str),'DDMONYY') as days_off_in_period from roster_v r where ACT_STR_DT<to_date((select dt from roster_str),'DDMONYY') and act_end_dt>(select end_dt from roster_end) and duty_cd in (select duty_cd from assignment_types_v where duty_type in ('L','O')) and delete_ind='N' "+
 		"union all "+
@@ -136,24 +145,62 @@ class Query
 		"and total_days_off> to_char((select end_dt from roster_end),'DD')- (select non_leave_days from min_working_days)  "+
 		") ";
 	}
- 	void printSubqueries(){
+	
+	private void assembleQuery(){
 		Rank rank = new Rank(rankCode, fleet, uprankInd);
-		Map actingRankQuals = new HashMap(new RankQualsDAO().getActingRankQuals(fleet));
+		Qualification qual = new Qualification(rankCode, fleet);
+		
+		if (rank.getNumComponents()==1){
+			finalQuery=	headerSubquery+"\n"+
+						baseFleetSubquery+"\n"+
+						rank.queryComponents.get(rankCode)+"\n"+
+						qual.queryComponents.get(rankCode)+"\n"+
+						nonLeaveSubquery;
+		}
+		
+		if (rank.getNumComponents()==2 && qual.getNumComponents()==1){
+			finalQuery= headerSubquery+"\n"+
+						baseFleetSubquery+"\n"+
+						rank.queryComponents.get(rankCode)+"\n"+
+						qual.queryComponents.get(rankCode)+"\n"+	
+						nonLeaveSubquery+ "\n union \n"+
+						baseFleetSubquery+"\n"+
+						rank.queryComponents.get("Uprank")+"\n"+
+						qual.queryComponents.get(rankCode)+"\n"+	
+						nonLeaveSubquery;
+						}
+						
+		if (rank.getNumComponents()==2 && qual.getNumComponents()==2){
+			finalQuery= headerSubquery+"\n"+
+						baseFleetSubquery+"\n"+
+						rank.queryComponents.get("CPT")+"\n"+
+						qual.queryComponents.get("CPT")+"\n"+	
+						nonLeaveSubquery+ "\n union \n"+
+						baseFleetSubquery+"\n"+
+						rank.queryComponents.get("FO")+"\n"+
+						qual.queryComponents.get("FO")+"\n"+	
+						nonLeaveSubquery;
+						}
+	}
+	
+ 	public void printSubqueries(){
+		Rank rank = new Rank(rankCode, fleet, uprankInd);
 		
   		generateHeader();
 		generateBaseFleet();
 		generateNonLeave();
 		
-		System.out.println(header);
-		System.out.println(baseFleet);
-		rank.examineComponents();
-/*		
- 		System.out.println(brfSubqueries.get(rank.getQueryRankList().get(0)));
-		System.out.println(brfSubqueries.get(rank.getQueryRankList().get(1))); 
-		System.out.println(nonLeave); */
+		Qualification qual = new Qualification(rankCode, fleet);
+		qual.examineComponents();
+		
+		
+/* 		System.out.println(headerSubquery);
+		System.out.println(baseFleetSubquery);
+		rank.examineComponents(); */
+/*		System.out.println(nonLeaveSubquery); */
 	}
 	
-
-
-	
+	String get(){
+		return finalQuery;
+	}
 }
