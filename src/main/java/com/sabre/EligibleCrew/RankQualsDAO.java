@@ -20,6 +20,7 @@ class RankQualsDAO
 		
 		try{
 		    DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+			DriverManager.setLoginTimeout(15);
 		    Connection conn = DriverManager.getConnection
 		    ("jdbc:oracle:thin:@192.168.0.106:1522:aeroflot", "acdba", "acdba");    
 		    Statement stmt = conn.createStatement();

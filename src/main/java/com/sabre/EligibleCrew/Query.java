@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
-
+import java.util.Set;
+import java.util.TreeSet;
 
 class Query
 {
-
 	private String fleet;
 	private String rankCode;
 	private String rosterMonth;
@@ -20,10 +20,9 @@ class Query
 	private String baseFleetSubquery;
 	private String nonLeaveSubquery;
 	private String finalQuery;
-/* 
- * Standard constructor with minimum required parameters
- */	
+	private static final String[] VALID_FLEETS = {"330","320","737","777","SU9"};
 	
+	/* Standard constructor with minimum required parameters */	
  	Query(String rankCode, String fleet, String rosterMonth, String rosterYear,
 				 String nonLeaveDays)
 	{
@@ -32,16 +31,18 @@ class Query
 		this.rosterMonth=rosterMonth;
 		this.rosterYear=rosterYear;
 		this.nonLeaveDays=nonLeaveDays;
-		generateHeader();
-		generateBaseFleet();
-		generateNonLeave();
-		assembleQuery();
+		
+		if(validateInput().size()==0){
+			generateHeader();
+			generateBaseFleet();
+			generateNonLeave();
+			assembleQuery();
+		}
+		
+		else{ throwInvalidInputError(validateInput()); }
 	}
 	
-/* 	
- * create with UPRANK option
- */	
- 
+	/* 	create with UPRANK option */
 	Query(String rankCode, String fleet, String rosterMonth, String rosterYear,
 				 String nonLeaveDays, String uprankInd)
 	{
@@ -51,21 +52,122 @@ class Query
 		this.rosterYear=rosterYear;
 		this.nonLeaveDays=nonLeaveDays;
 		this.uprankInd=uprankInd;
-  		generateHeader();
-		generateBaseFleet();
-		generateNonLeave();
-		assembleQuery();
+		
+		if(validateInput().size()==0){
+			generateHeader();
+			generateBaseFleet();
+			generateNonLeave();
+			assembleQuery();
+		}
+		
+		else{ throwInvalidInputError(validateInput()); }
 	}
+	
+	private List validateInput()
+	{
+		List errorMessages = new ArrayList();
+		
+		boolean rankIsValid=false;
+		boolean fleetIsValid=false;
+		boolean rosterMonthIsValid=false;
+		boolean rosterYearIsValid=false;
+		boolean nonLeaveDaysIsValid=false;
+		boolean uprankIsValid=false;
+		
+		String[] validRanks=Rank.getValidRanks();
+
+		for(int i=0; i<validRanks.length; i++){
+			if(validRanks[i].equals(rankCode.toUpperCase()))
+				rankIsValid=true; 
+		}
+		
+		for(int i=0; i<VALID_FLEETS.length; i++){
+			if(VALID_FLEETS[i].equals(fleet.toUpperCase()))
+				fleetIsValid=true;
+		}
+		
+		if(isInteger(rosterMonth) && Integer.parseInt(rosterMonth)>0 && Integer.parseInt(rosterMonth)<=12)
+			rosterMonthIsValid=true;
+		if(isInteger(rosterYear) && Integer.parseInt(rosterYear)>=2000 && Integer.parseInt(rosterYear)<=2099)
+			rosterYearIsValid=true;
+		if(isInteger(nonLeaveDays) && Integer.parseInt(nonLeaveDays)>=0 && Integer.parseInt(nonLeaveDays)<=31)
+			nonLeaveDaysIsValid=true;
+		if((uprankInd!=null && uprankInd.toUpperCase().equals("Y")) || uprankInd==null)
+			uprankIsValid=true;
+		if(!rankIsValid)
+			errorMessages.add("Rank code is invalid ("+rankCode+")");
+		if(!fleetIsValid)
+			errorMessages.add("Fleet code is invalid ("+fleet+")");
+		if(!rosterMonthIsValid)
+			errorMessages.add("Roster month must be between 0 and 12 ("+rosterMonth+")");
+		if(!rosterYearIsValid)
+			errorMessages.add("Roster year must be between 2000 and 2099 ("+rosterYear+")");
+		if(!nonLeaveDaysIsValid)
+			errorMessages.add("Leave days must be between 0 and 31 ("+nonLeaveDays+")");
+		if(!uprankIsValid)
+			errorMessages.add("Uprank indicator (if required) should be Y ("+uprankInd+")");
+		
+		return errorMessages;	
+	}
+	
+	void throwInvalidInputError(List errorMessages){
+		String errors = "";
+		Iterator iter = errorMessages.iterator();
+		while(iter.hasNext()){
+			errors=errors+iter.next();
+			if(iter.hasNext())
+				errors=errors+"\n";
+		}
+		
+		
+		throw new IllegalArgumentException("Inputs are invalid:\n"+errors);
+	}
+	
+	public boolean isInteger( String input ) 
+	{
+		try {
+			Integer.parseInt( input );
+			return true;
+		}
+		catch( Exception e ) {
+			return false;
+		}
+	}
+	
 	
 	private void generateHeader()
 	{
-		String rosterStrDt = "01" + rosterMonth + rosterYear;
+		String rosterStrDt = generateSqlRosterPeriod();
 		
 		headerSubquery =
 		"with roster_str as (select '"+rosterStrDt+"' as dt from dual), "+
 		"	 min_working_days as (select '"+nonLeaveDays+"' as non_leave_days from dual), "+
 		"     roster_end as (select last_day(to_date(dt,'DDMONYY HH24MI')+86399/86400) as  end_dt from roster_str) ";
 	
+	}
+	
+	String generateSqlRosterPeriod()
+	{
+		/* Transform rosterMonth and rosterYear inputs into a format agreeable with SQL. */
+		if(Integer.parseInt(rosterYear)<2010)
+			rosterYear="0"+(Integer.parseInt(rosterYear)-2000);
+		else
+			rosterYear=String.valueOf(Integer.parseInt(rosterYear)-2000);
+		
+		if(rosterMonth.equals("1")) { rosterMonth="JAN"; }
+		if(rosterMonth.equals("2")) { rosterMonth="FEB"; }
+		if(rosterMonth.equals("3")) { rosterMonth="MAR"; }
+		if(rosterMonth.equals("4")) { rosterMonth="APR"; }
+		if(rosterMonth.equals("5")) { rosterMonth="MAY"; }
+		if(rosterMonth.equals("6")) { rosterMonth="JUN"; }
+		if(rosterMonth.equals("7")) { rosterMonth="JUL"; }
+		if(rosterMonth.equals("8")) { rosterMonth="AUG"; }
+		if(rosterMonth.equals("9")) { rosterMonth="SEP"; }
+		if(rosterMonth.equals("10")) { rosterMonth="OCT"; }
+		if(rosterMonth.equals("11")) { rosterMonth="NOV"; }
+		if(rosterMonth.equals("12")) { rosterMonth="DEC"; }
+
+		return "01"+rosterMonth+rosterYear;
 	}
 				 
  	private void generateBaseFleet() // map in case of multi component, I.e, CPT and FO
@@ -183,24 +285,7 @@ class Query
 						}
 	}
 	
- 	public void printSubqueries(){
-		Rank rank = new Rank(rankCode, fleet, uprankInd);
-		
-  		generateHeader();
-		generateBaseFleet();
-		generateNonLeave();
-		
-		Qualification qual = new Qualification(rankCode, fleet);
-		qual.examineComponents();
-		
-		
-/* 		System.out.println(headerSubquery);
-		System.out.println(baseFleetSubquery);
-		rank.examineComponents(); */
-/*		System.out.println(nonLeaveSubquery); */
-	}
-	
-	String get(){
+	public String get(){
 		return finalQuery;
 	}
 }

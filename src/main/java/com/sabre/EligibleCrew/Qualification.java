@@ -10,13 +10,11 @@ class Qualification
 {
 	private String[] CC_FLEET_SPECIFIC = {"AC","E","K"};
 	private String[] FD_FLEET_SPECIFIC = {"EG","EW","G2","PC","LC"};
-	private String[] CC_NON_FLEET_SPECIFIC = 
-	{"MC","MCH","DGS","MKK","FAL","FCHK","GO","PARU"};
-	private String[] FD_NON_FLEET_SPECIFIC = 
-	{"INTF","MC","MCH","PARU"};
-	String fleet;
-	String pairingRank;
-	Map fleetQualNames;
+	private String[] CC_NON_FLEET_SPECIFIC = {"MC","MCH","DGS","MKK","FAL","FCHK","GO","PARU"};
+	private String[] FD_NON_FLEET_SPECIFIC = {"INTF","MC","MCH","PARU"};
+	private String fleet;
+	private String pairingRank;
+	private Map fleetQualNames;
 	private List requiredComponents;
 	protected Map queryComponents;
 	
@@ -31,7 +29,7 @@ class Qualification
 		return requiredComponents.size();
 	}
 	
- 	String generateNonFleetPart(){
+ 	private String generateNonFleetPart(){
 		String nonFleetComponent="";
 		if(rankIsCC()){
 			for(int i=0; i<CC_NON_FLEET_SPECIFIC.length; i++){
@@ -49,7 +47,7 @@ class Qualification
 		return nonFleetComponent;
 	}
 	
-	String generateFleetPart(){
+	private String generateFleetPart(){
 		String fleetComponent="";
 		if(rankIsCC()){
 			for(int i=0; i<CC_FLEET_SPECIFIC.length; i++){
@@ -67,15 +65,15 @@ class Qualification
 		return fleetComponent;	
 	}
 	
-	String generateLanguagePart(){
+	private String generateLanguagePart(){
 		return "and exists (select 1 from crew_qualifications_v q where a.staff_num=q.staff_num and qual_cd in ('ENG4','ENG5','ENG6') and NVL(q.expiry_dts,TO_DATE('31-DEC-2999','DD-MON-YYYY'))>(to_date((select dt from roster_str),'DDMONYY') + 4 + 23/24 + 59/1440)) ";
 	}
 	
-	String generateG1Part(){
+	private String generateG1Part(){
 		return "and exists (select 1 from crew_qualifications_v q where a.staff_num=q.staff_num and qual_cd in ('"+formFleetSpecQualName("G1")+"','ALG1') and q.expiry_dts>(to_date((select dt from roster_str),'DDMONYY') + 4 + 23/24 + 59/1440))";
 	}
 	
-	String generateLicenseCheck(String componentRank){
+	private String generateLicenseCheck(String componentRank){
 		String lcComp=null;
 		
 		if(componentRank.equals("FO"))
@@ -86,7 +84,7 @@ class Qualification
 		return lcComp;
 	}	
 	
-	Map defineFleetQualNames()
+	private Map defineFleetQualNames()
 	{
 		Map fleetQualNames = new HashMap();
 		if(rankIsCC()){
@@ -118,7 +116,7 @@ class Qualification
 		return fullQualName;
 	}
 	
- 	void determineComponents()
+ 	private void determineComponents()
 	{
 		requiredComponents = new ArrayList();	
 		queryComponents = new HashMap();
@@ -137,7 +135,7 @@ class Qualification
 		}
 	}
 	
-	String generateComponent(String componentRank){
+	private String generateComponent(String componentRank){
 		String qualComponent=null;
   		if(componentRank.equals("FO") || componentRank.equals("CPT")){
  			qualComponent=	generateNonFleetPart()+ "\n" +
@@ -156,24 +154,12 @@ class Qualification
 		return qualComponent;
 	}
 	
-	void examineComponents()
-	{
-		Iterator requiredComponentsIter = requiredComponents.iterator();
-		
-		while(requiredComponentsIter.hasNext()){
-			System.out.println(queryComponents.get(requiredComponentsIter.next()) + "\n\n");
-		}
-	}
-	
-	boolean rankIsCC()
+	private boolean rankIsCC()
 	{
 		if(!pairingRank.equals("FD") 
 		&& !pairingRank.equals("FO") 
 		&& !pairingRank.equals("CPT"))
-		return true;
-		
+		return true;		
 		else return false;
 	}
-	
-
 }

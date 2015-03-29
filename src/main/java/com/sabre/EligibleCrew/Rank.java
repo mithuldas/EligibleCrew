@@ -15,8 +15,7 @@ class Rank
 	private String uprankInd;
 	private String fleetCd;
 	private List requiredComponents;
-	/* required components is the key for queryComponents */
-	protected Map queryComponents;
+	protected Map queryComponents; /* required components is the key for queryComponents */
 	
 	public Rank(String rank, String fleet, String uprank_Ind)
 	{
@@ -30,6 +29,9 @@ class Rank
 		return requiredComponents.size();
 	}
 	
+	public static String[] getValidRanks(){
+		return VALID_RANKS;
+	}
 	private List getPairingRankAsList(){
 		List pairingRankList = new ArrayList();
 		pairingRankList.add(pairingRank);
@@ -46,26 +48,6 @@ class Rank
 			}
 		}
 		return rankIsValid;
-	}
-	
-	private List getQueryRankList() // logic in this function depends on uprank is required
-	{
-		List finalRanks = new ArrayList();
-		
-		if(!isValid()) {
-			System.out.println("Invalid rank"); // convert to logging
-		}
-		
-		if(pairingRank.equals("FD")){
-			finalRanks.add("CPT");
-			finalRanks.add("FO");
-		}
-
-		if(pairingRank.equals("CPT")){
-			finalRanks.add("CPT");
-		}
-
-		return finalRanks;
 	}
 	
 	public List getPossibleUpranks()
@@ -106,7 +88,7 @@ class Rank
 		else return false;
 	}
 	
-	void determineComponents() // needs to be thoroughly tested
+	void determineComponents()
 	{
 		requiredComponents = new ArrayList();	
 		queryComponents = new HashMap();
@@ -129,7 +111,6 @@ class Rank
 			(pairingRank, generateComponent(pairingRank, getPairingRankAsList(), "Simple"));
 		}
 		
-		/* if the pairing rank is CC and upranking is not needed*/
 		if( rankIsCC() && uprankInd==null) {
 			requiredComponents.add(pairingRank);
 			if(requiresActiveQual()) {
@@ -150,6 +131,8 @@ class Rank
 			queryComponents.put(pairingRank, generateComponent(pairingRank, componentRanks, "Complex"));
 		}
 		
+		/* for CC scenarios where qual is not required for the main pairing rank,
+			but there are possible upranks (resulting in 2 components) */
 		if(rankIsCC() && uprankInd!=null && !requiresActiveQual() && getPossibleUpranks()!=null) {
 			requiredComponents.add(pairingRank);
 			queryComponents.put
@@ -212,15 +195,5 @@ class Rank
 				sqlInput=sqlInput+",'";
 		}
 		return sqlInput;
-	}
-
-	void examineComponents()
-	{
-		Iterator requiredComponentsIter = requiredComponents.iterator();
-		
-		while(requiredComponentsIter.hasNext()){
-			System.out.println(queryComponents.get(requiredComponentsIter.next())+"\n\n");
-		}
-	
 	}
 }
