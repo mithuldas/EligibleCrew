@@ -154,18 +154,18 @@ class Query
 		else
 			rosterYear=String.valueOf(Integer.parseInt(rosterYear)-2000);
 		
-		if(rosterMonth.equals("1")) { rosterMonth="JAN"; }
-		if(rosterMonth.equals("2")) { rosterMonth="FEB"; }
-		if(rosterMonth.equals("3")) { rosterMonth="MAR"; }
-		if(rosterMonth.equals("4")) { rosterMonth="APR"; }
-		if(rosterMonth.equals("5")) { rosterMonth="MAY"; }
-		if(rosterMonth.equals("6")) { rosterMonth="JUN"; }
-		if(rosterMonth.equals("7")) { rosterMonth="JUL"; }
-		if(rosterMonth.equals("8")) { rosterMonth="AUG"; }
-		if(rosterMonth.equals("9")) { rosterMonth="SEP"; }
-		if(rosterMonth.equals("10")) { rosterMonth="OCT"; }
-		if(rosterMonth.equals("11")) { rosterMonth="NOV"; }
-		if(rosterMonth.equals("12")) { rosterMonth="DEC"; }
+		if(Integer.parseInt(rosterMonth)==1) { rosterMonth="JAN"; }
+		else if(Integer.parseInt(rosterMonth)==2) { rosterMonth="FEB"; }
+		else if(Integer.parseInt(rosterMonth)==3) { rosterMonth="MAR"; }
+		else if(Integer.parseInt(rosterMonth)==4) { rosterMonth="APR"; }
+		else if(Integer.parseInt(rosterMonth)==5) { rosterMonth="MAY"; }
+		else if(Integer.parseInt(rosterMonth)==6) { rosterMonth="JUN"; }
+		else if(Integer.parseInt(rosterMonth)==7) { rosterMonth="JUL"; }
+		else if(Integer.parseInt(rosterMonth)==8) { rosterMonth="AUG"; }
+		else if(Integer.parseInt(rosterMonth)==9) { rosterMonth="SEP"; }
+		else if(Integer.parseInt(rosterMonth)==10) { rosterMonth="OCT"; }
+		else if(Integer.parseInt(rosterMonth)==11) { rosterMonth="NOV"; }
+		else if(Integer.parseInt(rosterMonth)==12) { rosterMonth="DEC"; }
 
 		return "01"+rosterMonth+rosterYear;
 	}
